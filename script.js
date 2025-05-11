@@ -226,58 +226,58 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // ... (keep all other JavaScript code as is) ...
+
     // --- Color Extraction ---
     async function extractAndDisplayColors(imageUrl) {
         if (!imageUrl) return;
         colorsContainer.innerHTML = '<p>Extracting colors...</p>';
-        try {
-            // Need to use a CORS proxy if the image server doesn't allow direct access
-            // For simplicity, we'll assume direct access works or use a proxy like `https://cors-anywhere.herokuapp.com/`
-            // const proxyUrl = 'https://cors-anywhere.herokuapp.com/'; // Be mindful of proxy usage limits
-            // const proxiedImageUrl = proxyUrl + imageUrl;
-            // For many CDNs, direct access might work for extract-colors.js
-            // If CORS issues persist, the image needs to be fetched server-side or via a reliable proxy.
+        extractedColorsCache = []; // Clear previous cache
 
-            const img = new Image();
-            img.crossOrigin = "Anonymous"; // Important for canvas-based extraction from different origins
-            img.src = imageUrl; // Try direct first
+        // Use a CORS proxy. api.allorigins.win is one option.
+        // It fetches the content of the URL and its /raw endpoint attempts to return the raw data.
+        const proxyImageUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(imageUrl)}`;
 
-            img.onload = async () => {
-                 try {
-                    const colors = await extractColors(img, { /* options */ });
-                    extractedColorsCache = colors;
-                    colorsContainer.innerHTML = '';
-                    if (colors && colors.length > 0) {
-                        colors.forEach(color => {
-                            const colorBox = document.createElement('div');
-                            colorBox.classList.add('color-box');
-                            colorBox.style.backgroundColor = color.hex;
-                            colorBox.title = color.hex;
-                            colorsContainer.appendChild(colorBox);
-                        });
-                        // Automatically send the first prominent color to WLED if IP is set
-                        if (wledIpInput.value.trim() && extractedColorsCache.length > 0) {
-                           // sendPrimaryColorToWLED(extractedColorsCache[0]); // Optional: auto-send
-                        }
-                    } else {
-                        colorsContainer.innerHTML = '<p>Could not extract colors.</p>';
-                    }
-                } catch (e) {
-                    console.error('Error during color extraction from loaded image:', e);
-                    colorsContainer.innerHTML = `<p>Error extracting colors (client-side). CORS might be an issue.</p>`;
+        const img = new Image();
+        // crossOrigin is still good practice, though the proxy should ideally set open CORS headers.
+        img.crossOrigin = "Anonymous";
+
+        img.onload = async () => {
+            try {
+                // The extractColors library should be able to take an HTMLImageElement
+                const colors = await extractColors(img); // Pass the loaded image element
+                extractedColorsCache = colors;
+                colorsContainer.innerHTML = ''; // Clear "Extracting colors..."
+                if (colors && colors.length > 0) {
+                    colors.forEach(color => {
+                        const colorBox = document.createElement('div');
+                        colorBox.classList.add('color-box');
+                        colorBox.style.backgroundColor = color.hex;
+                        colorBox.title = `${color.hex} (R:${color.red} G:${color.green} B:${color.blue})`;
+                        colorsContainer.appendChild(colorBox);
+                    });
+                    // Optionally, automatically send the first prominent color to WLED if IP is set
+                    // if (wledIpInput.value.trim() && extractedColorsCache.length > 0) {
+                    //    sendPrimaryColorToWLED(extractedColorsCache[0]);
+                    // }
+                } else {
+                    colorsContainer.innerHTML = '<p>Could not extract colors (no colors found by library).</p>';
                 }
-            };
-            img.onerror = () => {
-                console.error('Error loading image for color extraction. Likely CORS issue.');
-                colorsContainer.innerHTML = `<p>Failed to load album art for color extraction. Check CORS policy of the image server.</p>`;
+            } catch (e) {
+                console.error('Error during color extraction from loaded image via proxy:', e);
+                colorsContainer.innerHTML = `<p>Error extracting colors. The proxy might have failed or the image format is unsupported. Check console.</p>`;
             }
+        };
 
+        img.onerror = () => {
+            console.error(`Error loading image via proxy: ${proxyImageUrl}`);
+            colorsContainer.innerHTML = `<p>Failed to load album art via proxy. The proxy might be down or the original image URL is invalid.</p>`;
+        };
 
-        } catch (error) {
-            console.error('Error extracting colors:', error);
-            colorsContainer.innerHTML = `<p>Error extracting colors: ${error.message}</p>`;
-        }
+        img.src = proxyImageUrl; // Set the source to the proxied URL
     }
+
+// ... (rest of your script.js) ...
 
     // --- WLED Integration ---
     async function sendWLEDCommand(ip, command) {
