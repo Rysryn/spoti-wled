@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify WLED Sync</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Spotify WLED Color Sync</h1>
+
+        <div id="auth-section">
+            <button id="login-button">Login with Spotify</button>
+        </div>
+
+        <div id="main-content" style="display: none;">
+            <div id="spotify-info">
+                <h2>Currently Playing</h2>
+                <div id="track-details">
+                    <img id="album-art" src="" alt="Album Art">
+                    <div>
+                        <p><strong>Song:</strong> <span id="song-name">N/A</span></p>
+                        <p><strong>Artist:</strong> <span id="artist-name">N/A</span></p>
+                        <p><strong>Album:</strong> <span id="album-name">N/A</span></p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="color-palette">
+                <h2>Extracted Colors</h2>
+                <div id="colors"></div>
+            </div>
+
+            <div id="wled-control">
+                <h2>WLED Control</h2>
+                <label for="wled-ip">WLED IP Address:</label>
+                <input type="text" id="wled-ip" placeholder="e.g., 192.168.1.100">
+                <button id="send-color-to-wled">Send Main Color to WLED</button>
+                <p id="wled-status"></p>
+            </div>
+
+            <div id="audio-analysis">
+                <h2>Audio Spectrum for WLED (Microphone)</h2>
+                <button id="start-audio-button">Start Audio Analysis</button>
+                <canvas id="spectrum-canvas" width="300" height="100"></canvas>
+                <p><i>(Note: This uses your microphone input)</i></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/extract-colors@4.0.2/dist/extract-colors.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
